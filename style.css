@@ -1,0 +1,24 @@
+#board {
+    border-collapse: collapse;
+    border: .5px ridge black;
+}
+
+td {
+    margin: 0px;
+    padding: 0px;
+}
+
+.cell {
+    width: 20px;
+    height: 20px;
+    border: .5px ridge black;
+}
+
+.snake {
+    background-color: blue;
+    transition: all;
+}
+
+.food {
+    background-color: red;
+}
