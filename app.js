@@ -13,23 +13,8 @@ const KEY_DIRECTION_MAPPING = {
 }
 
 const $gameBoard = $("#board");
-const dims = 20;
 
 let lastDirection = "up"
-
-function drawBoard() {
-    for (let y = 0; y < dims; y++) {
-
-        let $row = $("<tr>");
-        for (let x = 0; x < dims; x++) {
-            let $cell = $(`<td>
-                <div id=c-${x}-${y} class="cell"></div>
-            </td>`);
-            $row.append($cell); 
-        }
-        $gameBoard.append($row);
-    }
-}
 
 $("body").on("keyup", handleKeyPress);
 
@@ -38,13 +23,14 @@ function handleKeyPress(event) {
     lastDirection = KEY_DIRECTION_MAPPING[key];
 }
 
-drawBoard();
+let game = Game.drawBoard(20);
+
+let snake = Snake.initializeSnake();
+
 Food.addFoodToBoard();
-let snake = new Snake;
-snake.initializeSnake();
 
 setInterval(() => {
-    snake.moveSnake();
+    // snake.moveSnake();
 }, MILISECONDS_PER_TICK)
 
 
