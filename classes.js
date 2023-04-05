@@ -5,9 +5,11 @@
  * class for the Game and board itself
  */
 class Game {
-    constructor(width, height) {
+    constructor(tickRate, width, height) {
         this.width = width;
         this.height = height;
+        this.tickRate = tickRate;
+        this.ticksId = null;
     }
 
     /**
@@ -18,7 +20,7 @@ class Game {
      * @param {integer} height - height of game board; default is same as width
      * @returns new Game instance
      */
-    static drawBoard(width, height=width) {
+    static drawBoard(tickRate, width, height=width) {
         for (let y = 0; y < height; y++) {
 
             let $row = $("<tr>");
@@ -31,7 +33,24 @@ class Game {
             $gameBoard.append($row);
         }    
 
-        return new Game(width, height);
+        return new Game(tickRate, width, height);
+    }
+
+    /**
+     * called to start the game
+     */
+    startTicks() {
+        this.ticksId = setInterval(() => {
+            snake.moveSnake();
+        }, this.tickRate)
+    }
+
+    /**
+     * called when the snake hits itself or the wall to end the game
+     */
+    endGame() {
+        clearInterval(this.ticksId);
+        console.log("YOU LOSE!")
     }
 }
 
@@ -90,16 +109,22 @@ class Snake {
             arrivingCell.x += 1;
         }
 
+        let isOverlapping = this.checkForOverlap(arrivingCell);
+        let isOffBoard = this.checkForOffBoard(arrivingCell);
         // check if arrivingCell is already a snake cell
+        if (isOverlapping | isOffBoard) {
+            game.endGame();
+        } else {
+            this.drawUndrawSnakeCells([arrivingCell]);
+            this.bodyCells.unshift(arrivingCell);
+    
+            if (!this.checkForFood(arrivingCell)) {
+                let leavingCell = this.bodyCells.pop();
+                this.drawUndrawSnakeCells([leavingCell])
+            }     
+        }
         // check if arrivingCell is on the board
 
-        this.drawUndrawSnakeCells([arrivingCell]);
-        this.bodyCells.unshift(arrivingCell);
-
-        if (!this.checkForFood(arrivingCell)) {
-            let leavingCell = this.bodyCells.pop();
-            this.drawUndrawSnakeCells([leavingCell])
-        } 
 
         console.log(JSON.parse(JSON.stringify(this.bodyCells)));
     }
@@ -110,7 +135,7 @@ class Snake {
      * @returns TRUE if food is in the cell, FALSE if not
      */
     checkForFood(cell) {
-        let $cell = $(`#c-${cell.x}-${cell.y}`);
+        let $cell = getJqCell(cell);
         if ($cell.hasClass("food")) {
             $cell.removeClass("food");
             Food.addFoodToBoard();
@@ -123,6 +148,37 @@ class Snake {
     }
 
     /**
+     * checks if the passed coordinates point to a cell that is already
+     * occupied by the snake
+     * @param {object} cell - coordinate cell with x and y parameters
+     * @returns TRUE if is a snake cell, FALSE if not
+     */
+    checkForOverlap(cell) {
+        let $cell = getJqCell(cell);
+        if ($cell.hasClass("snake")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * checks if the passed coordinates point to a cell that doesn't exist 
+     * (i.e. is outside of the dimensions of the board)
+     * @param {object} cell - coordinate cell with x and y parameters
+     * @returns TRUE if cell is out of the bounds of the board; FALSE if valid 
+     * cell
+     */
+    checkForOffBoard(cell) {
+        let offTop = cell.y < 0;
+        let offLeft = cell.x < 0;
+        let offBottom = cell.y >= game.height;
+        let offRight = cell.x >= game.width;
+
+        return offTop | offLeft | offBottom | offRight;
+    }
+
+    /**
      * toggles "snake" class on the cells defined by the passed array of
      * coordinate
      * @param {array} cells - array of coordinates point to cells to  draw/
@@ -130,7 +186,7 @@ class Snake {
      */
     drawUndrawSnakeCells(cells) {
         for (let cell of cells) {
-            $(`#c-${cell.x}-${cell.y}`).toggleClass("snake");
+            getJqCell(cell).toggleClass("snake");
         } 
     }
 }
@@ -154,8 +210,8 @@ class Food {
         do {
             x = randomInt(0, game.width - 1);
             y = randomInt(0, game.height - 1);
-        } while ($(`#c-${x}-${y}`).hasClass("snake"));
-        $(`#c-${x}-${y}`).addClass("food");
+        } while (getJqCell({x, y}).hasClass("snake"));
+        getJqCell({x, y}).addClass("food");
     }
 }
 
@@ -173,4 +229,8 @@ class Food {
         throw new Error("One or more non-integers provided - unpredictable results!")
     }
     return Math.floor(Math.random() * (high - low + 1)) + low;
+}
+
+function getJqCell(cell) {
+    return $(`#c-${cell.x}-${cell.y}`);
 }

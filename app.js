@@ -1,6 +1,6 @@
 "use strict";
 
-const MILISECONDS_PER_TICK = 200;
+const MILISECONDS_PER_TICK = 100;
 const KEY_DIRECTION_MAPPING = {
     w: "up",
     ArrowUp: "up",
@@ -23,15 +23,9 @@ function handleKeyPress(event) {
     lastDirection = KEY_DIRECTION_MAPPING[key];
 }
 
-let game = Game.drawBoard(20);
-
+let game = Game.drawBoard(MILISECONDS_PER_TICK, 10);
 let snake = Snake.initializeSnake();
 
 Food.addFoodToBoard();
 
-setInterval(() => {
-    // snake.moveSnake();
-}, MILISECONDS_PER_TICK)
-
-
-
+game.startTicks();
